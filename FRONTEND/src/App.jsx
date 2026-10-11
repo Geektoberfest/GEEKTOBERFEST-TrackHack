@@ -9,6 +9,7 @@ import HackathonDetails from "./pages/HackathonDetails";
 import CreateHackathon from "./pages/CreateHackathon";
 import EditHackathon from "./pages/EditHackathon";
 import TrackerPage from "./pages/TrackerPage";
+import NotFound from "./pages/NotFound";
 
 function App() {
     return (
@@ -25,6 +26,7 @@ function App() {
                     <Route path="/hackathons/:id" element={<ProtectedRoute><HackathonDetails /></ProtectedRoute>} />
                     <Route path="/hackathons/:id/edit" element={<ProtectedRoute><EditHackathon /></ProtectedRoute>} />
                     <Route path="/trackers/:id" element={<ProtectedRoute><TrackerPage /></ProtectedRoute>} />
+                    <Route path="*" element={<NotFound />} />
                 </Routes>
             </div>
         </div>
