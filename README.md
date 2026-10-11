@@ -142,6 +142,7 @@ All application API routes are mounted under `/api`.
 | POST | `/api/trackers` | Create a tracker |
 | GET | `/api/github/profile/:username` | Fetch a GitHub profile |
 | GET | `/api/github/repos/:username` | Fetch GitHub repositories |
+| GET | `/api/github/stats/:username` | Fetch repository and contribution stats for the GitHub dashboard |
 
 The hackathon, tracker, and GitHub routes require authentication where configured. Requests that require authentication should include the JWT in the `Authorization` header as a Bearer token.
 
