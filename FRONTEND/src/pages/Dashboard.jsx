@@ -4,6 +4,7 @@ import api from "../api";
 import HackathonCard from "../components/HackathonCard";
 import ProgressBar from "../components/ProgressBar";
 import EmptyState from "../components/EmptyState";
+import { trackersToCsv, downloadCsv } from "../utils/exportCsv";
 
 function Dashboard() {
     const [hackathons, setHackathons] = useState([]);
@@ -35,6 +36,11 @@ function Dashboard() {
         { label: "Completed", value: hackathons.filter((h) => h.status === "Completed").length }
     ];
 
+    const handleExport = () => {
+        const today = new Date().toISOString().slice(0, 10);
+        downloadCsv("trackhack-trackers-" + today + ".csv", trackersToCsv(trackers));
+    };
+
     if (loading) {
         return <p>Loading...</p>;
     }
@@ -54,7 +60,16 @@ function Dashboard() {
             </div>
 
             <div>
-                <h2 className="text-xl font-semibold mb-3">My progress</h2>
+                <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-xl font-semibold">My progress</h2>
+                    <button
+                        onClick={handleExport}
+                        disabled={trackers.length === 0}
+                        className="border border-gray-300 px-3 py-1 rounded text-sm disabled:opacity-50"
+                    >
+                        Export CSV
+                    </button>
+                </div>
                 {trackers.length === 0 ? (
                     <EmptyState
                         title="No trackers yet"

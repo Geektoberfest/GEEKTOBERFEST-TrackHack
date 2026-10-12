@@ -81,7 +81,7 @@ const getTrackers = async (req, res) => {
         }
 
         const trackers = await Tracker.find(filter)
-            .populate("hackathon", "title organizer status")
+            .populate("hackathon", "title organizer status mode location startDate endDate")
             .sort({ createdAt: -1 });
 
         res.json({
@@ -99,7 +99,7 @@ const getTrackerById = async (req, res) => {
             });
         }
 
-        const tracker = await Tracker.findById(req.params.id).populate("hackathon", "title organizer status");
+        const tracker = await Tracker.findById(req.params.id).populate("hackathon", "title organizer status mode location startDate endDate");
 
         if (!tracker) {
             return res.status(404).json({

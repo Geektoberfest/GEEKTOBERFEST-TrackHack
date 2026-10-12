@@ -18,25 +18,31 @@ describe("SearchBar", () => {
 });
 
 describe("FilterBar", () => {
+    const filters = { status: "", mode: "", startFrom: "", startTo: "", sort: "newest" };
+
     test("emits status and mode changes", async () => {
         const user = userEvent.setup();
-        const onStatusChange = vi.fn();
-        const onModeChange = vi.fn();
+        const onChange = vi.fn();
 
-        render(
-            <FilterBar
-                status=""
-                mode=""
-                onStatusChange={onStatusChange}
-                onModeChange={onModeChange}
-            />
-        );
+        render(<FilterBar filters={filters} onChange={onChange} />);
 
         const selects = screen.getAllByRole("combobox");
         await user.selectOptions(selects[0], "Completed");
         await user.selectOptions(selects[1], "Offline");
 
-        expect(onStatusChange).toHaveBeenCalledWith("Completed");
-        expect(onModeChange).toHaveBeenCalledWith("Offline");
+        expect(onChange).toHaveBeenCalledWith("status", "Completed");
+        expect(onChange).toHaveBeenCalledWith("mode", "Offline");
+    });
+
+    test("emits sort changes", async () => {
+        const user = userEvent.setup();
+        const onChange = vi.fn();
+
+        render(<FilterBar filters={filters} onChange={onChange} />);
+
+        const selects = screen.getAllByRole("combobox");
+        await user.selectOptions(selects[2], "title");
+
+        expect(onChange).toHaveBeenCalledWith("sort", "title");
     });
 });
