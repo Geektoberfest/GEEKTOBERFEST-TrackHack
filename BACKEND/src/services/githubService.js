@@ -13,11 +13,6 @@ const makeHeaders = () => {
     return headers;
 };
 
-// simple in-memory cache so we don't hit GitHub's rate limit (60 requests/hour without a token)
-const CACHE_TIME = 10 * 60 * 1000;
-const MAX_CACHE_ENTRIES = 200;
-const cache = new Map();
-
 const makeError = (message, status) => {
     const error = new Error(message);
     error.status = status;
@@ -40,12 +35,10 @@ const fetchFromGitHub = async (path) => {
     }
 
     if (response.status === 403 || response.status === 429) {
-        if (response.headers.get("x-ratelimit-remaining") === "0") {
-            const reset = Number(response.headers.get("x-ratelimit-reset")) * 1000;
-            const minutes = Math.max(1, Math.ceil((reset - Date.now()) / 60000));
-            throw makeError("GitHub rate limit reached. Try again in " + minutes + " min or add a GITHUB_TOKEN to your .env file", 429);
-        }
-        throw makeError("GitHub refused the request", 502);
+        const reset = Number(response.headers?.get("x-ratelimit-reset")) * 1000;
+        const minutes = reset ? Math.max(1, Math.ceil((reset - Date.now()) / 60000)) : null;
+        const when = minutes ? "Try again in " + minutes + " min" : "Try again later";
+        throw makeError("GitHub rate limit reached. " + when + " or add a GITHUB_TOKEN to your .env file", 429);
     }
 
     if (!response.ok) {
@@ -55,22 +48,7 @@ const fetchFromGitHub = async (path) => {
     return response.json();
 };
 
-const callGitHub = async (path) => {
-    const cached = cache.get(path);
-    if (cached && Date.now() - cached.time < CACHE_TIME) {
-        return cached.data;
-    }
-
-    const data = await fetchFromGitHub(path);
-
-    // remove the oldest entry so the cache can't grow forever
-    if (cache.size >= MAX_CACHE_ENTRIES) {
-        cache.delete(cache.keys().next().value);
-    }
-    cache.set(path, { data, time: Date.now() });
-
-    return data;
-};
+const callGitHub = (path) => fetchFromGitHub(path);
 
 const getUserProfile = async (username) => {
     const data = await callGitHub("/users/" + encodeURIComponent(username));
@@ -113,7 +91,31 @@ const eventTypes = {
     CreateEvent: "created"
 };
 
+// the dashboard makes 3 GitHub calls per visit, so cache the finished stats for 10 minutes
+// (60 requests/hour without a token). Only the stats are cached, not the individual calls.
+const STATS_CACHE_TIME = 10 * 60 * 1000;
+const MAX_STATS_CACHE_ENTRIES = 200;
+const statsCache = new Map();
+
 const getUserStats = async (username) => {
+    const key = username.toLowerCase();
+    const cached = statsCache.get(key);
+    if (cached && Date.now() - cached.time < STATS_CACHE_TIME) {
+        return cached.data;
+    }
+
+    const stats = await buildUserStats(username);
+
+    // remove the oldest entry so the cache can't grow forever
+    if (statsCache.size >= MAX_STATS_CACHE_ENTRIES) {
+        statsCache.delete(statsCache.keys().next().value);
+    }
+    statsCache.set(key, { data: stats, time: Date.now() });
+
+    return stats;
+};
+
+const buildUserStats = async (username) => {
     const name = encodeURIComponent(username);
 
     // GitHub only returns public events from the last 90 days (max 100 per page)
