@@ -10,19 +10,31 @@ function Register() {
     const [password, setPassword] = useState("");
     const [githubUsername, setGithubUsername] = useState("");
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
     const { saveLogin } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (loading) return;
+
         setError("");
+        setLoading(true);
 
         try {
-            const res = await api.post("/auth/register", { name, email, password, githubUsername });
+            const res = await api.post("/auth/register", {
+                name,
+                email,
+                password,
+                githubUsername,
+            });
             saveLogin(res.data.token, res.data.user);
             navigate("/dashboard");
         } catch (err) {
             setError(err.response?.data?.message || "Something went wrong");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -37,6 +49,7 @@ function Register() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
+                    disabled={loading}
                     className="w-full border border-gray-300 rounded px-3 py-2"
                 />
                 <input
@@ -45,6 +58,7 @@ function Register() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    disabled={loading}
                     className="w-full border border-gray-300 rounded px-3 py-2"
                 />
                 <PasswordInput
@@ -53,16 +67,22 @@ function Register() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     minLength={6}
+                    disabled={loading}
                 />
                 <input
                     type="text"
                     placeholder="GitHub username (optional)"
                     value={githubUsername}
                     onChange={(e) => setGithubUsername(e.target.value)}
+                    disabled={loading}
                     className="w-full border border-gray-300 rounded px-3 py-2"
                 />
-                <button type="submit" className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
-                    Register
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                    {loading ? "Creating account..." : "Register"}
                 </button>
             </form>
             <p className="mt-4 text-sm">

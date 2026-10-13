@@ -218,6 +218,7 @@ All application API routes are mounted under `/api`.
 | DELETE | `/api/admin/users/:id` | Delete a user and their trackers (admin only) |
 | GET | `/api/github/profile/:username` | Fetch a GitHub profile |
 | GET | `/api/github/repos/:username` | Fetch GitHub repositories |
+| GET | `/api/github/stats/:username` | Fetch repository and contribution stats for the GitHub dashboard |
 
 ### Searching hackathons
 

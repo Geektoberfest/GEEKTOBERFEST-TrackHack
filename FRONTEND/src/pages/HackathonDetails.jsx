@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "../api";
 import { useAuth } from "../context/AuthContext";
 import StatusBadge from "../components/StatusBadge";
+import ConfirmDialog from "../components/ConfirmDialog";
 import { formatDate } from "../utils/formatDate";
 
 function HackathonDetails() {
@@ -12,6 +13,8 @@ function HackathonDetails() {
     const [hackathon, setHackathon] = useState(null);
     const [tracker, setTracker] = useState(null);
     const [error, setError] = useState("");
+    const [confirmingDelete, setConfirmingDelete] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         const loadData = async () => {
@@ -41,15 +44,15 @@ function HackathonDetails() {
     };
 
     const handleDelete = async () => {
-        if (!window.confirm("Delete this hackathon?")) {
-            return;
-        }
+        setDeleting(true);
 
         try {
             await api.delete("/hackathons/" + id);
             navigate("/dashboard");
         } catch (err) {
             setError(err.response?.data?.message || "Could not delete hackathon");
+            setConfirmingDelete(false);
+            setDeleting(false);
         }
     };
 
@@ -121,12 +124,23 @@ function HackathonDetails() {
                         <Link to={"/hackathons/" + id + "/edit"} className="border border-gray-300 px-4 py-2 rounded">
                             Edit
                         </Link>
-                        <button onClick={handleDelete} className="border border-red-500 text-red-600 px-4 py-2 rounded">
+                        <button onClick={() => setConfirmingDelete(true)} className="border border-red-500 text-red-600 px-4 py-2 rounded">
                             Delete
                         </button>
                     </>
                 )}
             </div>
+
+            {confirmingDelete && (
+                <ConfirmDialog
+                    title="Delete hackathon?"
+                    message={'Delete "' + hackathon.title + '"? This cannot be undone.'}
+                    confirmLabel="Delete hackathon"
+                    confirming={deleting}
+                    onConfirm={handleDelete}
+                    onCancel={() => setConfirmingDelete(false)}
+                />
+            )}
         </div>
     );
 }
