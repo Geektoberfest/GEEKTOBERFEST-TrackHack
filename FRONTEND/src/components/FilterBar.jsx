@@ -1,13 +1,6 @@
 const statuses = ["Upcoming", "Registered", "In Progress", "Completed", "Cancelled"];
 const modes = ["Online", "Offline", "Hybrid"];
-const sorts = [
-    { value: "newest", label: "Newest first" },
-    { value: "oldest", label: "Oldest first" },
-    { value: "startDate", label: "Start date (soonest)" },
-    { value: "-startDate", label: "Start date (latest)" },
-    { value: "deadline", label: "Registration deadline" },
-    { value: "title", label: "Title (A-Z)" }
-];
+import { sortOptions } from "../utils/sortOptions";
 
 function FilterBar({ filters, onChange }) {
     return (
@@ -61,7 +54,7 @@ function FilterBar({ filters, onChange }) {
                 onChange={(e) => onChange("sort", e.target.value)}
                 className="border border-gray-300 rounded px-3 py-2 bg-white"
             >
-                {sorts.map((item) => (
+                {sortOptions.map((item) => (
                     <option key={item.value} value={item.value}>{item.label}</option>
                 ))}
             </select>

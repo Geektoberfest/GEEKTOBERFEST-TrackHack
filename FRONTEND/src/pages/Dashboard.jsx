@@ -5,19 +5,19 @@ import HackathonCard from "../components/HackathonCard";
 import ProgressBar from "../components/ProgressBar";
 import EmptyState from "../components/EmptyState";
 import { trackersToCsv, downloadCsv } from "../utils/exportCsv";
+import { sortOptions } from "../utils/sortOptions";
 
 function Dashboard() {
     const [hackathons, setHackathons] = useState([]);
     const [trackers, setTrackers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [sort, setSort] = useState("newest");
 
     useEffect(() => {
         const loadData = async () => {
             try {
-                const hackathonRes = await api.get("/hackathons?mine=true");
                 const trackerRes = await api.get("/trackers");
-                setHackathons(hackathonRes.data.hackathons);
                 setTrackers(trackerRes.data.trackers.filter((tracker) => tracker.hackathon));
             } catch (err) {
                 setError(err.response?.data?.message || "Could not load your dashboard");
@@ -28,6 +28,20 @@ function Dashboard() {
 
         loadData();
     }, []);
+
+    // reload only the hackathon list when the sort changes
+    useEffect(() => {
+        const loadHackathons = async () => {
+            try {
+                const res = await api.get("/hackathons", { params: { mine: "true", sort } });
+                setHackathons(res.data.hackathons);
+            } catch (err) {
+                setError(err.response?.data?.message || "Could not load your hackathons");
+            }
+        };
+
+        loadHackathons();
+    }, [sort]);
 
     const stats = [
         { label: "Total Hackathons", value: hackathons.length },
@@ -95,7 +109,19 @@ function Dashboard() {
 
             <div>
                 <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-xl font-semibold">My hackathons</h2>
+                    <div className="flex items-center gap-3">
+                        <h2 className="text-xl font-semibold">My hackathons</h2>
+                        <select
+                            value={sort}
+                            onChange={(e) => setSort(e.target.value)}
+                            aria-label="Sort my hackathons"
+                            className="border border-gray-300 rounded px-2 py-1 text-sm bg-white"
+                        >
+                            {sortOptions.map((item) => (
+                                <option key={item.value} value={item.value}>{item.label}</option>
+                            ))}
+                        </select>
+                    </div>
                     <Link to="/hackathons/create" className="text-indigo-600 font-medium">
                         + Add hackathon
                     </Link>
