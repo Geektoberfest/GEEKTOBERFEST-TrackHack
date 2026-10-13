@@ -3,17 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "../api";
 import { useAuth } from "../context/AuthContext";
 import StatusBadge from "../components/StatusBadge";
-
-function formatDate(date) {
-    if (!date) {
-        return "TBA";
-    }
-    return new Date(date).toLocaleDateString("en-IN", {
-        day: "numeric",
-        month: "short",
-        year: "numeric"
-    });
-}
+import { formatDate } from "../utils/formatDate";
 
 function HackathonDetails() {
     const { id } = useParams();
@@ -72,6 +62,7 @@ function HackathonDetails() {
     }
 
     const isOwner = hackathon.createdBy && hackathon.createdBy._id === user.id;
+    const canManage = isOwner || user.role === "admin";
     const hasValidWebsite = hackathon.website && hackathon.website.startsWith("http");
 
     return (
@@ -115,7 +106,7 @@ function HackathonDetails() {
                     </button>
                 )}
 
-                {isOwner && (
+                {canManage && (
                     <>
                         <Link to={"/hackathons/" + id + "/edit"} className="border border-gray-300 px-4 py-2 rounded">
                             Edit

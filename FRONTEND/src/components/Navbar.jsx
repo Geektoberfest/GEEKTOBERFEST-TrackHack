@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 function Navbar() {
-    const { user, logout } = useAuth();
+    const { user, isAdmin, logout } = useAuth();
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -21,6 +21,7 @@ function Navbar() {
                         <Link to="/dashboard">Dashboard</Link>
                         <Link to="/hackathons">Hackathons</Link>
                         <Link to="/hackathons/create">Add Hackathon</Link>
+                        {isAdmin && <Link to="/admin">Admin</Link>}
                         <span className="text-indigo-200">{user.name}</span>
                         <button onClick={handleLogout} className="bg-white text-indigo-600 px-3 py-1 rounded">
                             Logout

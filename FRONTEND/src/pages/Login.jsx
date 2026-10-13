@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api";
 import { useAuth } from "../context/AuthContext";
+import PasswordInput from "../components/PasswordInput";
 
 function Login() {
     const [email, setEmail] = useState("");
@@ -36,13 +37,10 @@ function Login() {
                     required
                     className="w-full border border-gray-300 rounded px-3 py-2"
                 />
-                <input
-                    type="password"
-                    placeholder="Password"
+                <PasswordInput
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="w-full border border-gray-300 rounded px-3 py-2"
                 />
                 <button type="submit" className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
                     Login

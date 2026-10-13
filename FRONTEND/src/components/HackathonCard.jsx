@@ -1,16 +1,6 @@
 import { Link } from "react-router-dom";
 import StatusBadge from "./StatusBadge";
-
-function formatDate(date) {
-    if (!date) {
-        return "TBA";
-    }
-    return new Date(date).toLocaleDateString("en-IN", {
-        day: "numeric",
-        month: "short",
-        year: "numeric"
-    });
-}
+import { formatDateRange } from "../utils/formatDate";
 
 function HackathonCard({ hackathon }) {
     return (
@@ -21,7 +11,7 @@ function HackathonCard({ hackathon }) {
             </div>
             <p className="text-sm text-gray-600">{hackathon.organizer}</p>
             <p className="text-sm text-gray-500">
-                {hackathon.mode} • {formatDate(hackathon.startDate)} to {formatDate(hackathon.endDate)}
+                {hackathon.mode} • {formatDateRange(hackathon.startDate, hackathon.endDate)}
             </p>
             <Link to={"/hackathons/" + hackathon._id} className="text-indigo-600 text-sm font-medium">
                 View details

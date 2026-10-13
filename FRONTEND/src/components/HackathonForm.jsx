@@ -64,8 +64,9 @@ function HackathonForm({ initialData, onSubmit, buttonText }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {inputFields.map((field) => (
                     <div key={field.name}>
-                        <label className="block text-sm font-medium mb-1">{field.label}</label>
+                        <label htmlFor={field.name} className="block text-sm font-medium mb-1">{field.label}</label>
                         <input
+                            id={field.name}
                             type={field.type}
                             name={field.name}
                             value={form[field.name]}
@@ -77,8 +78,8 @@ function HackathonForm({ initialData, onSubmit, buttonText }) {
                 ))}
 
                 <div>
-                    <label className="block text-sm font-medium mb-1">Mode</label>
-                    <select name="mode" value={form.mode} onChange={handleChange} className={inputClass}>
+                    <label htmlFor="mode" className="block text-sm font-medium mb-1">Mode</label>
+                    <select id="mode" name="mode" value={form.mode} onChange={handleChange} className={inputClass}>
                         {modes.map((mode) => (
                             <option key={mode} value={mode}>{mode}</option>
                         ))}
@@ -86,8 +87,8 @@ function HackathonForm({ initialData, onSubmit, buttonText }) {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium mb-1">Status</label>
-                    <select name="status" value={form.status} onChange={handleChange} className={inputClass}>
+                    <label htmlFor="status" className="block text-sm font-medium mb-1">Status</label>
+                    <select id="status" name="status" value={form.status} onChange={handleChange} className={inputClass}>
                         {statuses.map((status) => (
                             <option key={status} value={status}>{status}</option>
                         ))}
@@ -96,8 +97,9 @@ function HackathonForm({ initialData, onSubmit, buttonText }) {
             </div>
 
             <div>
-                <label className="block text-sm font-medium mb-1">Description</label>
+                <label htmlFor="description" className="block text-sm font-medium mb-1">Description</label>
                 <textarea
+                    id="description"
                     name="description"
                     value={form.description}
                     onChange={handleChange}

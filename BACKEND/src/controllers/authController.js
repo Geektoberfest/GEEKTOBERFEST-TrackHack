@@ -3,8 +3,18 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 // Creates a login token that is valid for 7 days
-const createToken = (userId) => {
-    return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
+const createToken = (userId, role) => {
+    return jwt.sign({ id: userId, role: role || "user" }, process.env.JWT_SECRET, { expiresIn: "7d" });
+};
+
+// Emails listed in ADMIN_EMAILS are elevated to admin on register/login.
+// Removing an email from the list does not demote existing admins;
+// use the admin API or promote script for that.
+const adminEmails = () => {
+    return (process.env.ADMIN_EMAILS || "")
+        .split(",")
+        .map((email) => email.trim().toLowerCase())
+        .filter(Boolean);
 };
 
 const register = async (req, res) => {
@@ -36,14 +46,18 @@ const register = async (req, res) => {
         // Hash the password before saving it
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // Never trust a client-sent role; admins are bootstrapped via ADMIN_EMAILS
+        const role = adminEmails().includes(email.toLowerCase()) ? "admin" : "user";
+
         const user = await User.create({
             name,
             email,
             password: hashedPassword,
-            githubUsername
+            githubUsername,
+            role
         });
 
-        const token = createToken(user._id);
+        const token = createToken(user._id, user.role);
 
         res.status(201).json({
             success: true,
@@ -53,7 +67,8 @@ const register = async (req, res) => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
-                githubUsername: user.githubUsername
+                githubUsername: user.githubUsername,
+                role: user.role
             }
         });
     } catch (error) {
@@ -91,7 +106,13 @@ const login = async (req, res) => {
             });
         }
 
-        const token = createToken(user._id);
+        // Bootstrap path for pre-existing accounts listed in ADMIN_EMAILS
+        if (user.role !== "admin" && adminEmails().includes(user.email)) {
+            user.role = "admin";
+            await user.save();
+        }
+
+        const token = createToken(user._id, user.role);
 
         res.json({
             success: true,
@@ -101,7 +122,8 @@ const login = async (req, res) => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
-                githubUsername: user.githubUsername
+                githubUsername: user.githubUsername,
+                role: user.role
             }
         });
     

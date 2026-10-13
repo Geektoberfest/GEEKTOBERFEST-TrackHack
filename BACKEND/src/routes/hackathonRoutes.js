@@ -8,7 +8,7 @@ const {
     updateHackathon,
     deleteHackathon
 } = require("../controllers/hackathonController");
-const auth = require("../middleware/auth.middleware");
+const { auth } = require("../middleware/auth.middleware");
 
 router.get("/", auth, getHackathons);
 router.get("/:id", auth, getHackathonById);
