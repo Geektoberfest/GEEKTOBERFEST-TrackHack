@@ -22,6 +22,7 @@ function Navbar() {
                         <Link to="/hackathons">Hackathons</Link>
                         <Link to="/hackathons/create">Add Hackathon</Link>
                         <Link to="/github">GitHub</Link>
+                        <Link to="/saved">Saved</Link>
                         {isAdmin && <Link to="/admin">Admin</Link>}
                         <span className="text-indigo-200">{user.name}</span>
                         <button onClick={handleLogout} className="bg-white text-indigo-600 px-3 py-1 rounded">

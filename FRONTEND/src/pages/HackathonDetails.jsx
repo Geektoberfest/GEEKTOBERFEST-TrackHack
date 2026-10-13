@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "../api";
 import { useAuth } from "../context/AuthContext";
 import StatusBadge from "../components/StatusBadge";
+import BookmarkButton from "../components/BookmarkButton";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { formatDate } from "../utils/formatDate";
 
@@ -99,6 +100,7 @@ function HackathonDetails() {
             {hackathon.description && <p className="whitespace-pre-line">{hackathon.description}</p>}
 
             <div className="flex flex-wrap gap-3 pt-2">
+                <BookmarkButton hackathonId={hackathon._id} />
                 {tracker ? (
                     <Link to={"/trackers/" + tracker._id} className="bg-indigo-600 text-white px-4 py-2 rounded">
                         Open my tracker
