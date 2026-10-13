@@ -9,6 +9,8 @@ import { trackersToCsv, downloadCsv } from "../utils/exportCsv";
 function Dashboard() {
     const [hackathons, setHackathons] = useState([]);
     const [trackers, setTrackers] = useState([]);
+    const [recommendations, setRecommendations] = useState([]);
+    const [profileIncomplete, setProfileIncomplete] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
@@ -19,6 +21,15 @@ function Dashboard() {
                 const trackerRes = await api.get("/trackers");
                 setHackathons(hackathonRes.data.hackathons);
                 setTrackers(trackerRes.data.trackers.filter((tracker) => tracker.hackathon));
+
+                try {
+                    const recommendedRes = await api.get("/hackathons/recommended", { params: { limit: 4 } });
+                    setRecommendations(recommendedRes.data.recommendations || []);
+                    setProfileIncomplete(Boolean(recommendedRes.data.profileIncomplete));
+                } catch (recErr) {
+                    // recommendations are a bonus; the dashboard still works without them
+                    void recErr;
+                }
             } catch (err) {
                 setError(err.response?.data?.message || "Could not load your dashboard");
             } finally {
@@ -57,6 +68,35 @@ function Dashboard() {
                         <p className="text-sm text-gray-600">{stat.label}</p>
                     </div>
                 ))}
+            </div>
+
+            <div>
+                <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-xl font-semibold">Recommended for you</h2>
+                    <Link to="/recommended" className="text-indigo-600 font-medium">
+                        View all
+                    </Link>
+                </div>
+                {recommendations.length === 0 ? (
+                    <EmptyState
+                        title="No recommendations yet"
+                        message={profileIncomplete
+                            ? "Add your skills and interests to get personalized suggestions."
+                            : "There are no upcoming hackathons to suggest right now."}
+                        actionLabel={profileIncomplete ? "Complete your profile" : "Browse hackathons"}
+                        actionTo={profileIncomplete ? "/profile" : "/hackathons"}
+                    />
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {recommendations.map((item) => (
+                            <HackathonCard
+                                key={item.hackathon._id}
+                                hackathon={item.hackathon}
+                                recommendation={item}
+                            />
+                        ))}
+                    </div>
+                )}
             </div>
 
             <div>

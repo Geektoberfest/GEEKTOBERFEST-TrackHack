@@ -10,6 +10,8 @@ import CreateHackathon from "./pages/CreateHackathon";
 import EditHackathon from "./pages/EditHackathon";
 import TrackerPage from "./pages/TrackerPage";
 import Admin from "./pages/Admin";
+import Profile from "./pages/Profile";
+import Recommended from "./pages/Recommended";
 
 function App() {
     return (
@@ -26,6 +28,8 @@ function App() {
                     <Route path="/hackathons/:id" element={<ProtectedRoute><HackathonDetails /></ProtectedRoute>} />
                     <Route path="/hackathons/:id/edit" element={<ProtectedRoute><EditHackathon /></ProtectedRoute>} />
                     <Route path="/trackers/:id" element={<ProtectedRoute><TrackerPage /></ProtectedRoute>} />
+                    <Route path="/recommended" element={<ProtectedRoute><Recommended /></ProtectedRoute>} />
+                    <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                     <Route path="/admin" element={<ProtectedRoute adminOnly><Admin /></ProtectedRoute>} />
                 </Routes>
             </div>

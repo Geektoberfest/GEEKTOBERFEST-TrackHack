@@ -95,6 +95,16 @@ function HackathonDetails() {
 
             {hackathon.description && <p className="whitespace-pre-line">{hackathon.description}</p>}
 
+            {Array.isArray(hackathon.tags) && hackathon.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                    {hackathon.tags.map((tag) => (
+                        <span key={tag} className="bg-indigo-50 text-indigo-700 text-xs px-2 py-0.5 rounded-full">
+                            {tag}
+                        </span>
+                    ))}
+                </div>
+            )}
+
             <div className="flex flex-wrap gap-3 pt-2">
                 {tracker ? (
                     <Link to={"/trackers/" + tracker._id} className="bg-indigo-600 text-white px-4 py-2 rounded">

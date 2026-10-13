@@ -1,7 +1,9 @@
 const mongoose = require("mongoose");
 const Hackathon = require("../models/Hackathon");
+const User = require("../models/User");
+const { normalizeList, rankHackathons } = require("../services/recommendationService");
 
-const fields = ["title","description","organizer","startDate","endDate","registrationDeadline","location","mode","status","website"];
+const fields = ["title","description","organizer","startDate","endDate","registrationDeadline","location","mode","status","website","tags"];
 
 const statuses = ["Upcoming", "Registered", "In Progress", "Completed", "Cancelled"];
 const modes = ["Online", "Offline", "Hybrid"];
@@ -36,7 +38,7 @@ const parseDate = (value, endOfDay) => {
 };
 
 const getHackathons = async (req, res) => {
-        const { search, status, mode, mine, startFrom, startTo, sort, page, limit } = req.query;
+        const { search, status, mode, mine, startFrom, startTo, sort, page, limit, tags } = req.query;
         const filter = {};
 
         if (typeof search === "string" && search.trim()) {
@@ -100,6 +102,13 @@ const getHackathons = async (req, res) => {
 
         if (mine === "true") {
             filter.createdBy = req.user;
+        }
+
+        if (tags) {
+            const tagList = normalizeList(tags);
+            if (tagList.length > 0) {
+                filter.tags = { $in: tagList.map((tag) => new RegExp("^" + escapeRegex(tag) + "$", "i")) };
+            }
         }
 
         if (sort && !sortOptions[sort]) {
@@ -191,6 +200,9 @@ const createHackathon = async (req, res) => {
                 data[field] = req.body[field];
             }
         });
+        if (data.tags !== undefined) {
+            data.tags = normalizeList(data.tags);
+        }
         data.createdBy = req.user;
 
         const hackathon = await Hackathon.create(data);
@@ -231,6 +243,10 @@ const updateHackathon = async (req, res) => {
                 hackathon[field] = req.body[field];
             }
         });
+
+        if (req.body.tags !== undefined) {
+            hackathon.tags = normalizeList(req.body.tags);
+        }
 
         if (hackathon.startDate && hackathon.endDate && hackathon.endDate < hackathon.startDate) {
             return res.status(400).json({
@@ -280,4 +296,54 @@ const deleteHackathon = async (req, res) => {
         });
 };
 
-module.exports = {getHackathons,getHackathonById,createHackathon,updateHackathon,deleteHackathon};
+// Suggests joinable hackathons ranked by overlap with the user's
+// skills, interests, and preferences (mode + location).
+const getRecommendedHackathons = async (req, res) => {
+        const user = await User.findById(req.user);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        let limit = 10;
+        if (req.query.limit !== undefined) {
+            limit = Number(req.query.limit);
+            if (!Number.isInteger(limit) || limit < 1) {
+                return res.status(400).json({
+                    success: false,
+                    message: "limit must be a positive whole number"
+                });
+            }
+            limit = Math.min(limit, MAX_LIMIT);
+        }
+
+        const hasSkills = Array.isArray(user.skills) && user.skills.length > 0;
+        const hasInterests = Array.isArray(user.interests) && user.interests.length > 0;
+        const hasModes = Array.isArray(user.preferredModes) && user.preferredModes.length > 0;
+        const profileIncomplete = !hasSkills && !hasInterests && !hasModes && !user.preferredLocation;
+
+        // Only suggest hackathons a user can still join
+        const hackathons = await Hackathon.find({
+            status: { $in: ["Upcoming", "Registered", "In Progress"] }
+        }).populate("createdBy", "name");
+
+        const ranked = rankHackathons(user, hackathons).slice(0, limit);
+
+        res.json({
+            success: true,
+            count: ranked.length,
+            total: hackathons.length,
+            profileIncomplete,
+            recommendations: ranked.map((item) => ({
+                hackathon: item.hackathon,
+                score: item.score,
+                matchedSkills: item.matchedSkills,
+                matchedInterests: item.matchedInterests,
+                reasons: item.reasons.length > 0 ? item.reasons : ["Upcoming hackathon you can still join"]
+            }))
+        });
+};
+
+module.exports = {getHackathons,getHackathonById,createHackathon,updateHackathon,deleteHackathon,getRecommendedHackathons};

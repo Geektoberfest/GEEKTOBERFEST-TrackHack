@@ -4,12 +4,12 @@
   "description": "HackTrack backend API",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js",
-    "test": "jest --runInBand",
-    "test:watch": "jest --runInBand --watch",
+    "start": "bun --preload ./src/bun-compat.js server.js",
+    "dev": "bun --watch --preload ./src/bun-compat.js server.js",
+    "test": "bun test --timeout 60000 --preload ./tests/bun-preload.js",
+    "test:watch": "bun test --watch --timeout 60000 --preload ./tests/bun-preload.js",
     "lint": "oxlint",
-    "promote-admin": "node scripts/promote-admin.js"
+    "promote-admin": "bun scripts/promote-admin.js"
   },
   "keywords": [],
   "author": "",

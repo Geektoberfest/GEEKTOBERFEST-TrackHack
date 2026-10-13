@@ -54,7 +54,11 @@ const updateUserRole = async (req, res) => {
             name: user.name,
             email: user.email,
             githubUsername: user.githubUsername,
-            role: user.role
+            role: user.role,
+            skills: user.skills || [],
+            interests: user.interests || [],
+            preferredModes: user.preferredModes || [],
+            preferredLocation: user.preferredLocation || ""
         }
     });
 };

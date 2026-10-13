@@ -13,6 +13,7 @@ TrackHack helps students keep track of hackathons and manage their progress from
 - Connect a GitHub username to a user profile
 - View GitHub profile information and public repositories
 - Keep separate trackers for different hackathons
+- Personalized hackathon recommendations based on skills, interests, and preferred mode/location
 
 ## Tech Stack
 
@@ -39,7 +40,7 @@ TrackHack helps students keep track of hackathons and manage their progress from
 
 Make sure you have the following installed:
 
-- Node.js and npm
+- Bun (v1.2 or newer) — package manager and runtime
 - A MongoDB database, either local or hosted on MongoDB Atlas
 - Git
 
@@ -54,7 +55,7 @@ cd TrackHack
 
 ```bash
 cd BACKEND
-npm install
+bun install
 ```
 
 Create a `.env` file inside the `BACKEND` directory:
@@ -72,7 +73,7 @@ Use a valid MongoDB connection string and a strong, randomly generated JWT secre
 Start the backend:
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 The API should be available at `http://localhost:5000`.
@@ -83,7 +84,7 @@ Open another terminal from the repository root:
 
 ```bash
 cd FRONTEND
-npm install
+bun install
 ```
 
 Create a `.env` file inside `FRONTEND`:
@@ -95,7 +96,7 @@ VITE_API_URL=http://localhost:5000/api
 Start the frontend:
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 Open the local URL printed by Vite, usually `http://localhost:5173`.
@@ -110,12 +111,12 @@ Run these commands from `BACKEND/`.
 
 | Command | Description |
 |---|---|
-| `npm install` | Install dependencies |
-| `npm run dev` | Start the development server |
-| `npm start` | Start the server |
-| `npm test` | Run backend integration tests (Jest + Supertest + in-memory MongoDB) |
-| `npm run lint` | Run Oxlint |
-| `npm run promote-admin -- <email>` | Promote an existing user to admin |
+| `bun install` | Install dependencies |
+| `bun run dev` | Start the development server |
+| `bun start` | Start the server |
+| `bun test` | Run backend integration tests (Bun test + Supertest + in-memory MongoDB) |
+| `bun run lint` | Run Oxlint |
+| `bun run promote-admin -- <email>` | Promote an existing user to admin |
 
 ### Frontend
 
@@ -123,17 +124,17 @@ Run these commands from `FRONTEND/`.
 
 | Command | Description |
 |---|---|
-| `npm install` | Install dependencies |
-| `npm run dev` | Start the Vite development server |
-| `npm run build` | Build the production frontend |
-| `npm run preview` | Preview the production build |
-| `npm run lint` | Run Oxlint |
-| `npm run test` | Run frontend component tests (Vitest + React Testing Library) |
+| `bun install` | Install dependencies |
+| `bun run dev` | Start the Vite development server |
+| `bun run build` | Build the production frontend |
+| `bun run preview` | Preview the production build |
+| `bun run lint` | Run Oxlint |
+| `bun run test` | Run frontend component tests (Vitest + React Testing Library) |
 
 ## Testing and CI
 
-- Backend: `cd BACKEND && npm test` runs integration tests for auth, hackathons, trackers, GitHub routes, and the auth guard. Tests use `mongodb-memory-server`, so no local MongoDB is needed. `JWT_SECRET` defaults to a test value when unset.
-- Frontend: `cd FRONTEND && npm run test` runs component tests for cards, badges, forms, filters, progress, route guards, and the API client.
+- Backend: `cd BACKEND && bun test` runs integration tests for auth, hackathons, trackers, GitHub routes, and the auth guard. Tests use `mongodb-memory-server`, so no local MongoDB is needed. `JWT_SECRET` defaults to a test value when unset.
+- Frontend: `cd FRONTEND && bun run test` runs component tests for cards, badges, forms, filters, progress, route guards, and the API client.
 - CI (`.github/workflows/ci.yml`) runs on pushes and pull requests to `main`: backend lint + integration tests, frontend lint + component tests + production build.
 
 ## API Overview
@@ -145,7 +146,9 @@ All application API routes are mounted under `/api`.
 | POST | `/api/auth/register` | Register a user |
 | POST | `/api/auth/login` | Log in |
 | GET | `/api/auth/me` | Get the authenticated user's details |
+| PUT | `/api/auth/me` | Update profile: name, GitHub username, skills, interests, preferred modes/location |
 | GET | `/api/hackathons` | List hackathons |
+| GET | `/api/hackathons/recommended?limit=10` | Ranked suggestions based on skills, interests, and preferences |
 | POST | `/api/hackathons` | Create a hackathon |
 | GET | `/api/hackathons/:id` | Get a hackathon |
 | PUT | `/api/hackathons/:id` | Update a hackathon |
@@ -175,6 +178,15 @@ All application API routes are mounted under `/api`.
 | `limit` | `limit=10` | Results per page (default 10, max 50) |
 
 Results are only paginated when `page` or `limit` is sent. The response includes `total` (all matching hackathons), `count` (results on this page), `page`, and `totalPages`. Invalid values return `400`.
+
+### Recommendations
+
+`GET /api/hackathons/recommended?limit=10` ranks joinable hackathons (`Upcoming`, `Registered`, `In Progress`) for the logged-in user:
+
+- Skill overlap with hackathon tags/title/description scores highest, then interests, then preferred mode, then preferred location.
+- Each entry returns `{ hackathon, score, matchedSkills, matchedInterests, reasons }` so the UI can explain why it was suggested.
+- `profileIncomplete: true` signals the user has no skills, interests, or preferences saved yet.
+- Users set these via `PUT /api/auth/me` (or the Profile page); hackathon `tags` are set on create/update and filterable via `GET /api/hackathons?tags=React,AI`.
 
 The hackathon, tracker, and GitHub routes require authentication where configured. Requests that require authentication should include the JWT in the `Authorization` header as a Bearer token.
 

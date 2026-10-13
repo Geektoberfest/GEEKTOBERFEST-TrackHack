@@ -22,6 +22,16 @@ function toDateInput(value) {
     return value.slice(0, 10);
 }
 
+function toTagsInput(value) {
+    if (!value) {
+        return "";
+    }
+    if (Array.isArray(value)) {
+        return value.join(", ");
+    }
+    return value;
+}
+
 function HackathonForm({ initialData, onSubmit, buttonText }) {
     const data = initialData || {};
 
@@ -35,7 +45,8 @@ function HackathonForm({ initialData, onSubmit, buttonText }) {
         location: data.location || "",
         mode: data.mode || "Online",
         status: data.status || "Upcoming",
-        website: data.website || ""
+        website: data.website || "",
+        tags: toTagsInput(data.tags)
     });
     const [error, setError] = useState("");
     const [saving, setSaving] = useState(false);
@@ -50,7 +61,12 @@ function HackathonForm({ initialData, onSubmit, buttonText }) {
         setSaving(true);
 
         try {
-            await onSubmit(form);
+            // the API stores tags as a list; the form edits them as comma-separated text
+            const payload = {
+                ...form,
+                tags: form.tags.split(",").map((tag) => tag.trim()).filter(Boolean)
+            };
+            await onSubmit(payload);
         } catch (err) {
             setError(err.response?.data?.message || "Something went wrong");
             setSaving(false);
@@ -106,6 +122,20 @@ function HackathonForm({ initialData, onSubmit, buttonText }) {
                     rows={4}
                     className={inputClass}
                 ></textarea>
+            </div>
+
+            <div>
+                <label htmlFor="tags" className="block text-sm font-medium mb-1">Tags / skills (comma-separated)</label>
+                <input
+                    id="tags"
+                    type="text"
+                    name="tags"
+                    value={form.tags}
+                    onChange={handleChange}
+                    placeholder="React, AI, Blockchain"
+                    className={inputClass}
+                />
+                <p className="text-xs text-gray-500 mt-1">Tags power personalized recommendations for other users.</p>
             </div>
 
             <button

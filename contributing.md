@@ -13,11 +13,11 @@ Please follow the guidelines below to keep contributions easy to review and main
 
 ## Development Setup
 
-TrackHack uses React, Vite, Tailwind CSS, Node.js, Express, and MongoDB.
+TrackHack uses React, Vite, Tailwind CSS, Bun, Express, and MongoDB.
 
 ### Prerequisites
 
-- Node.js and npm
+- Bun (v1.2 or newer)
 - MongoDB locally or through MongoDB Atlas
 - Git
 
@@ -34,7 +34,7 @@ cd TrackHack
 
 ```bash
 cd BACKEND
-npm install
+bun install
 ```
 
 Create a `.env` file using the configuration documented in the root `README.md`. Add your MongoDB connection string and a secure JWT secret.
@@ -42,7 +42,7 @@ Create a `.env` file using the configuration documented in the root `README.md`.
 Start the backend using the development command configured in `BACKEND/package.json`:
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 ### 3. Set up the frontend
@@ -51,8 +51,8 @@ Open another terminal:
 
 ```bash
 cd FRONTEND
-npm install
-npm run dev
+bun install
+bun run dev
 ```
 
 Configure the frontend API URL according to the root `README.md` and your local backend port.
@@ -95,13 +95,13 @@ Before opening a pull request:
 - Run the frontend production build:
 
   ```bash
-  npm run build
+  bun run build
   ```
 
 - Run the available frontend lint command:
 
   ```bash
-  npm run lint
+  bun run lint
   ```
 
 - Test the affected backend routes and frontend pages manually.
