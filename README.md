@@ -4,7 +4,8 @@ TrackHack helps students keep track of hackathons and manage their progress from
 
 ## Features
 
-- User registration and login
+- User registration and login with `user` / `admin` roles
+- Admins can manage any hackathon or tracker and administer users
 - Create, view, update, and delete hackathon entries
 - Store hackathon dates, registration deadlines, location, mode, and website
 - Track progress through different stages of a hackathon
@@ -63,9 +64,10 @@ PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_long_random_secret
 GITHUB_TOKEN=your_github_personal_access_token
+ADMIN_EMAILS=admin1@example.com,admin2@example.com
 ```
 
-Use a valid MongoDB connection string and a strong, randomly generated JWT secret. The GitHub token is used by the backend's GitHub integration; keep it private and grant only the permissions needed.
+Use a valid MongoDB connection string and a strong, randomly generated JWT secret. The GitHub token is used by the backend's GitHub integration; keep it private and grant only the permissions needed. `ADMIN_EMAILS` is optional: accounts registering or logging in with a listed email are elevated to `admin` for bootstrapping. Removing an email from the list does not demote existing admins.
 
 Start the backend:
 
@@ -111,6 +113,9 @@ Run these commands from `BACKEND/`.
 | `npm install` | Install dependencies |
 | `npm run dev` | Start the development server |
 | `npm start` | Start the server |
+| `npm test` | Run backend integration tests (Jest + Supertest + in-memory MongoDB) |
+| `npm run lint` | Run Oxlint |
+| `npm run promote-admin -- <email>` | Promote an existing user to admin |
 
 ### Frontend
 
@@ -123,6 +128,13 @@ Run these commands from `FRONTEND/`.
 | `npm run build` | Build the production frontend |
 | `npm run preview` | Preview the production build |
 | `npm run lint` | Run Oxlint |
+| `npm run test` | Run frontend component tests (Vitest + React Testing Library) |
+
+## Testing and CI
+
+- Backend: `cd BACKEND && npm test` runs integration tests for auth, hackathons, trackers, GitHub routes, and the auth guard. Tests use `mongodb-memory-server`, so no local MongoDB is needed. `JWT_SECRET` defaults to a test value when unset.
+- Frontend: `cd FRONTEND && npm run test` runs component tests for cards, badges, forms, filters, progress, route guards, and the API client.
+- CI (`.github/workflows/ci.yml`) runs on pushes and pull requests to `main`: backend lint + integration tests, frontend lint + component tests + production build.
 
 ## API Overview
 
@@ -138,13 +150,36 @@ All application API routes are mounted under `/api`.
 | GET | `/api/hackathons/:id` | Get a hackathon |
 | PUT | `/api/hackathons/:id` | Update a hackathon |
 | DELETE | `/api/hackathons/:id` | Delete a hackathon |
-| GET | `/api/trackers` | List trackers |
+| GET | `/api/trackers` | List trackers (own; admins can pass `?all=true`) |
 | POST | `/api/trackers` | Create a tracker |
+| GET | `/api/admin/users` | List users (admin only) |
+| PATCH | `/api/admin/users/:id/role` | Change a user's role (admin only) |
+| DELETE | `/api/admin/users/:id` | Delete a user and their trackers (admin only) |
 | GET | `/api/github/profile/:username` | Fetch a GitHub profile |
 | GET | `/api/github/repos/:username` | Fetch GitHub repositories |
 | GET | `/api/github/stats/:username` | Fetch repository and contribution stats for the GitHub dashboard |
 
+### Searching hackathons
+
+`GET /api/hackathons` accepts these optional query parameters, which can be combined:
+
+| Parameter | Example | Description |
+|---|---|---|
+| `search` | `search=ai` | Case-insensitive keyword match on title, organizer, description, or location |
+| `status` | `status=Upcoming,Completed` | One or more statuses, comma-separated |
+| `mode` | `mode=Online` | One or more modes, comma-separated |
+| `startFrom` | `startFrom=2026-10-01` | Hackathons starting on or after this date |
+| `startTo` | `startTo=2026-10-31` | Hackathons starting on or before this date |
+| `mine` | `mine=true` | Only hackathons created by the logged-in user |
+| `sort` | `sort=startDate` | `newest` (default), `oldest`, `startDate`, `-startDate`, `deadline`, or `title` |
+| `page` | `page=2` | Page number, starting at 1 |
+| `limit` | `limit=10` | Results per page (default 10, max 50) |
+
+Results are only paginated when `page` or `limit` is sent. The response includes `total` (all matching hackathons), `count` (results on this page), `page`, and `totalPages`. Invalid values return `400`.
+
 The hackathon, tracker, and GitHub routes require authentication where configured. Requests that require authentication should include the JWT in the `Authorization` header as a Bearer token.
+
+Users have a `user` or `admin` role, returned on register/login and in tokens. Registration never accepts a client-sent role. Owners can edit or delete their own hackathons and trackers; admins can manage any hackathon or tracker. The admin UI lives at `/admin` and is visible only to admins. Deleting a user removes their trackers but keeps hackathons they created.
 
 ## Project Structure
 

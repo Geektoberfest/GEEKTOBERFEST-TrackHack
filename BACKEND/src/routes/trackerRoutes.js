@@ -8,7 +8,7 @@ const {
     updateTracker,
     deleteTracker
 } = require("../controllers/trackerController");
-const auth = require("../middleware/auth.middleware");
+const { auth } = require("../middleware/auth.middleware");
 
 router.post("/", auth, createTracker);
 router.get("/", auth, getTrackers);

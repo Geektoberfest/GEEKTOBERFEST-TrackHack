@@ -1,34 +1,18 @@
-const express = require("express");
-const cors = require("cors");
 require("dotenv").config();
+const app = require("./src/app");
 const connectDB = require("./src/db/db");
-const authRoutes = require("./src/routes/authRoutes");
-const hackathonRoutes = require("./src/routes/hackathonRoutes");
-const trackerRoutes = require("./src/routes/trackerRoutes");
-const githubRoutes = require("./src/routes/githubRoutes");
 
-const app = express();
+const PORT = process.env.PORT || 5000;
 
-app.use(cors());
-app.use(express.json());
-app.get("/", (req, res) => {
-    res.json({
-        success: true,
-        message: "HackTrack API is running"
+if (require.main === module) {
+    connectDB().catch((error) => {
+        console.error("MongoDB connection failed: " + error.message);
+        process.exit(1);
     });
-});
 
-app.use("/api/auth", authRoutes);
-app.use("/api/hackathons", hackathonRoutes);
-app.use("/api/trackers", trackerRoutes);
-app.use("/api/github", githubRoutes);
+    app.listen(PORT, () => {
+        console.log("Server running on port " + PORT);
+    });
+}
 
-connectDB();
-
-
-
-const PORT = process.env.PORT;
-
-app.listen(PORT, () => {
-    console.log("Server running on port " + PORT);
-});
+module.exports = app;

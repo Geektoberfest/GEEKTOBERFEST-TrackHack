@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api";
 import { useAuth } from "../context/AuthContext";
+import PasswordInput from "../components/PasswordInput";
 
 function Register() {
     const [name, setName] = useState("");
@@ -46,14 +47,12 @@ function Register() {
                     required
                     className="w-full border border-gray-300 rounded px-3 py-2"
                 />
-                <input
-                    type="password"
+                <PasswordInput
                     placeholder="Password (min 6 characters)"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     minLength={6}
-                    className="w-full border border-gray-300 rounded px-3 py-2"
                 />
                 <input
                     type="text"
