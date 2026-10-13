@@ -9,6 +9,7 @@ import HackathonDetails from "./pages/HackathonDetails";
 import CreateHackathon from "./pages/CreateHackathon";
 import EditHackathon from "./pages/EditHackathon";
 import TrackerPage from "./pages/TrackerPage";
+import GitHubDashboard from "./pages/GitHubDashboard";
 import Admin from "./pages/Admin";
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
                     <Route path="/hackathons/:id" element={<ProtectedRoute><HackathonDetails /></ProtectedRoute>} />
                     <Route path="/hackathons/:id/edit" element={<ProtectedRoute><EditHackathon /></ProtectedRoute>} />
                     <Route path="/trackers/:id" element={<ProtectedRoute><TrackerPage /></ProtectedRoute>} />
+                    <Route path="/github" element={<ProtectedRoute><GitHubDashboard /></ProtectedRoute>} />
                     <Route path="/admin" element={<ProtectedRoute adminOnly><Admin /></ProtectedRoute>} />
                 </Routes>
             </div>
