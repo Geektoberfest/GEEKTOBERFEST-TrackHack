@@ -25,7 +25,7 @@ TrackHack helps students keep track of hackathons and manage their progress from
 - Axios
 
 **Backend**
-- Node.js
+- Bun (runtime + package manager)
 - Express
 - MongoDB
 - Mongoose
@@ -41,7 +41,7 @@ TrackHack helps students keep track of hackathons and manage their progress from
 Make sure you have the following installed:
 
 - Bun (v1.2 or newer) — package manager and runtime
-- A MongoDB database, either local or hosted on MongoDB Atlas
+- A MongoDB database: local (`scoop install mongodb` or `winget install MongoDB.Server`, then run `mongod --dbpath C:\data\db`) or hosted on MongoDB Atlas
 - Git
 
 ### 1. Clone the repository
@@ -101,7 +101,14 @@ bun run dev
 
 Open the local URL printed by Vite, usually `http://localhost:5173`.
 
-Keep both the frontend and backend running while using the application.
+Keep MongoDB, the backend, and the frontend running while using the application (three terminals).
+
+> **Windows + Scoop note:** `scoop install mongodb` does not register a Windows service, so start the database manually with `mongod --dbpath C:\data\db` (create the folder first) and leave that window open. To register it as a service instead, run once from an admin terminal:
+>
+> ```powershell
+> mongod --dbpath C:\data\db --logpath C:\data\log\mongod.log --install --serviceName MongoDB
+> net start MongoDB
+> ```
 
 ## Available Scripts
 
@@ -136,6 +143,57 @@ Run these commands from `FRONTEND/`.
 - Backend: `cd BACKEND && bun test` runs integration tests for auth, hackathons, trackers, GitHub routes, and the auth guard. Tests use `mongodb-memory-server`, so no local MongoDB is needed. `JWT_SECRET` defaults to a test value when unset.
 - Frontend: `cd FRONTEND && bun run test` runs component tests for cards, badges, forms, filters, progress, route guards, and the API client.
 - CI (`.github/workflows/ci.yml`) runs on pushes and pull requests to `main`: backend lint + integration tests, frontend lint + component tests + production build.
+
+### Backend tests: MongoDB binary
+
+The first backend test run downloads a `mongod` binary (~700MB) into the OS cache (`~/.cache/mongodb-binaries` on Windows: `C:\Users\<you>\.cache\mongodb-binaries`). It needs network access and a few minutes; later runs reuse the cached binary. To skip the download, point the runner at an already-installed `mongod` (same terminal, before `bun test`):
+
+```powershell
+$env:MONGOMS_SYSTEM_BINARY="C:\Users\<you>\scoop\apps\mongodb\current\bin\mongod.exe"
+bun test
+```
+
+Run a single test file while debugging:
+
+```bash
+cd BACKEND
+bun test --timeout 60000 --preload ./tests/bun-preload.js tests/auth.test.js
+```
+
+### Bun notes
+
+- `BACKEND/src/bun-compat.js` is preloaded by every Bun entrypoint (`dev`, `start`, `test`). It works around Bun 1.3 not implementing the `node:v8` API that `bson` (via Mongoose) probes at import. Never run the backend with a bare `bun server.js`, or it crashes with `NotImplementedError: node:v8 isBuildingSnapshot`.
+- Frontend component tests run under `happy-dom` (see `FRONTEND/vitest.config.js`) because `jsdom` worker startup is broken under the Bun runtime.
+- Dependencies are pinned in `BACKEND/bun.lock` and `FRONTEND/bun.lock`. Install with `bun install --frozen-lockfile` in CI.
+
+## Running for debugging
+
+Start the stack in this order, one terminal each:
+
+1. `mongod --dbpath C:\data\db` — wait for `Waiting for connections` in the log.
+2. `cd BACKEND && bun run dev` — watch mode, restarts on file changes. Expect `Server running on port 5000`.
+3. `cd FRONTEND && bun run dev` — restart it after any `.env` change; Vite only reads `.env` at startup.
+
+Health checks:
+
+- Backend: open `http://localhost:5000/` → `{"success":true,"message":"HackTrack API is running"}`.
+- Frontend: open the Vite URL (usually `http://localhost:5173/`).
+- Database: `mongosh --eval "db.runCommand({ping: 1})"` → `{ ok: 1 }`.
+
+Where to look when something breaks:
+
+- Backend terminal: request errors, `MongoDB connection failed`, startup crashes.
+- Browser DevTools (F12): **Console** for frontend errors, **Network** tab for the failing request's status code and response body — far more informative than the UI's generic messages.
+
+Common issues:
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `NotImplementedError: node:v8 isBuildingSnapshot` on backend start | Ran without the compat preload | Use `bun run dev` / `bun start` (they include `--preload ./src/bun-compat.js`); never bare `bun server.js` |
+| `http://localhost:5000/` won't connect, but `bun run dev` processes exist | Stale processes from Ctrl+C holding no listener (or an old pre-fix process) | Kill leftover `bun.exe` processes, then `bun run dev` once |
+| `MongoDB connection failed` in backend log | `mongod` isn't running | Start `mongod --dbpath C:\data\db`, then restart the backend |
+| UI shows "Something went wrong" on register/login | Backend unreachable (down, wrong port, or frontend using a stale `VITE_API_URL`) | Verify the health endpoint, restart frontend after `.env` changes |
+| Backend tests hang downloading MongoDB | First-run binary download (~700MB) | Wait it out, or set `MONGOMS_SYSTEM_BINARY` to a local `mongod.exe` (see above) |
 
 ## API Overview
 
@@ -198,18 +256,22 @@ Users have a `user` or `admin` role, returned on register/login and in tokens. R
 TrackHack/
 ├── BACKEND/
 │   ├── server.js
+│   ├── bun.lock
+│   ├── tests/               # bun-preload.js (compat shim + in-memory Mongo setup)
 │   └── src/
 │       ├── controllers/
 │       ├── db/
 │       ├── middleware/
 │       ├── models/
 │       ├── routes/
-│       └── services/
+│       ├── services/        # recommendationService (skills/interests scoring)
+│       └── bun-compat.js    # Bun runtime workaround, preloaded by dev/start/test
 └── FRONTEND/
     ├── public/
+    ├── bun.lock
     └── src/
         ├── components/
-        ├── pages/
+        ├── pages/           # Profile, Recommended, Dashboard, ...
         ├── App.jsx
         └── api.js
 ```
