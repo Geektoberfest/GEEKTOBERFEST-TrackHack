@@ -4,6 +4,13 @@ const User = require("../models/User");
 
 const fields = ["title","description","organizer","startDate","endDate","registrationDeadline","location","mode","status","website"];
 
+// maximum lengths for text fields; keep in sync with FRONTEND/src/components/HackathonForm.jsx
+const textLimits = { title: 100, organizer: 100, location: 100, website: 200, description: 2000 };
+
+const findTooLong = (body) => Object.keys(textLimits).find((field) => typeof body[field] === "string" && body[field].length > textLimits[field]);
+
+const tooLongMessage = (field) => `${field} must be ${textLimits[field]} characters or fewer`;
+
 const statuses = ["Upcoming", "Registered", "In Progress", "Completed", "Cancelled"];
 const modes = ["Online", "Offline", "Hybrid"];
 
@@ -210,6 +217,14 @@ const createHackathon = async (req, res) => {
             });
         }
 
+        const tooLong = findTooLong(req.body);
+        if (tooLong) {
+            return res.status(400).json({
+                success: false,
+                message: tooLongMessage(tooLong)
+            });
+        }
+
         if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
             return res.status(400).json({
                 success: false,
@@ -255,6 +270,14 @@ const updateHackathon = async (req, res) => {
             return res.status(403).json({
                 success: false,
                 message: "You can only edit hackathons you created"
+            });
+        }
+
+        const tooLong = findTooLong(req.body);
+        if (tooLong) {
+            return res.status(400).json({
+                success: false,
+                message: tooLongMessage(tooLong)
             });
         }
 
