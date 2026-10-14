@@ -85,8 +85,9 @@ function Hackathons() {
         updateParams({ [name]: value, page: 1 });
     };
 
+    // resets the search text and every filter back to the defaults
     const clearFilters = () => {
-        const cleared = { page: 1 };
+        const cleared = { page: 1, search: "" };
         filterKeys.forEach((key) => {
             cleared[key] = "";
         });
