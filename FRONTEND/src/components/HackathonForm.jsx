@@ -2,6 +2,9 @@ import { useState } from "react";
 
 const inputClass = "w-full border border-gray-300 rounded px-3 py-2";
 
+// maximum lengths; keep in sync with BACKEND/src/controllers/hackathonController.js
+const limits = { title: 100, organizer: 100, location: 100, website: 200, description: 2000 };
+
 const inputFields = [
     { name: "title", label: "Title", type: "text", required: true },
     { name: "organizer", label: "Organizer", type: "text", required: true },
@@ -30,6 +33,16 @@ function toTagsInput(value) {
         return value.join(", ");
     }
     return value;
+}
+
+function Counter({ length, max }) {
+    const nearLimit = length >= max * 0.9;
+
+    return (
+        <p className={"text-xs text-right mt-1 " + (nearLimit ? "text-amber-600" : "text-gray-500")}>
+            {length}/{max}
+        </p>
+    );
 }
 
 function HackathonForm({ initialData, onSubmit, buttonText }) {
@@ -88,8 +101,10 @@ function HackathonForm({ initialData, onSubmit, buttonText }) {
                             value={form[field.name]}
                             onChange={handleChange}
                             required={field.required}
+                            maxLength={limits[field.name]}
                             className={inputClass}
                         />
+                        {limits[field.name] && <Counter length={form[field.name].length} max={limits[field.name]} />}
                     </div>
                 ))}
 
@@ -120,8 +135,10 @@ function HackathonForm({ initialData, onSubmit, buttonText }) {
                     value={form.description}
                     onChange={handleChange}
                     rows={4}
+                    maxLength={limits.description}
                     className={inputClass}
                 ></textarea>
+                <Counter length={form.description.length} max={limits.description} />
             </div>
 
             <div>

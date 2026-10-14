@@ -232,7 +232,7 @@ All application API routes are mounted under `/api`.
 | `startFrom` | `startFrom=2026-10-01` | Hackathons starting on or after this date |
 | `startTo` | `startTo=2026-10-31` | Hackathons starting on or before this date |
 | `mine` | `mine=true` | Only hackathons created by the logged-in user |
-| `sort` | `sort=startDate` | `newest` (default), `oldest`, `startDate`, `-startDate`, `deadline`, or `title` |
+| `sort` | `sort=-deadline` | `newest` (default), `oldest`, `startDate`, `-startDate`, `deadline`, `-deadline`, `title`, or `-title` (a leading `-` means descending). Hackathons without a start date or deadline always come last when sorting by those fields. |
 | `page` | `page=2` | Page number, starting at 1 |
 | `limit` | `limit=10` | Results per page (default 10, max 50) |
 

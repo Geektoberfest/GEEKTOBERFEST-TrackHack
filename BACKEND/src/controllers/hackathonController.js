@@ -5,6 +5,13 @@ const { normalizeList, rankHackathons } = require("../services/recommendationSer
 
 const fields = ["title","description","organizer","startDate","endDate","registrationDeadline","location","mode","status","website","tags"];
 
+// maximum lengths for text fields; keep in sync with FRONTEND/src/components/HackathonForm.jsx
+const textLimits = { title: 100, organizer: 100, location: 100, website: 200, description: 2000 };
+
+const findTooLong = (body) => Object.keys(textLimits).find((field) => typeof body[field] === "string" && body[field].length > textLimits[field]);
+
+const tooLongMessage = (field) => `${field} must be ${textLimits[field]} characters or fewer`;
+
 const statuses = ["Upcoming", "Registered", "In Progress", "Completed", "Cancelled"];
 const modes = ["Online", "Offline", "Hybrid"];
 
@@ -14,8 +21,13 @@ const sortOptions = {
     startDate: { startDate: 1 },
     "-startDate": { startDate: -1 },
     deadline: { registrationDeadline: 1 },
-    title: { title: 1 }
+    "-deadline": { registrationDeadline: -1 },
+    title: { title: 1 },
+    "-title": { title: -1 }
 };
+
+// sorting by these fields puts hackathons without a value last, whatever the direction
+const dateSortFields = ["startDate", "registrationDeadline"];
 
 const MAX_LIMIT = 50;
 
@@ -101,7 +113,8 @@ const getHackathons = async (req, res) => {
         }
 
         if (mine === "true") {
-            filter.createdBy = req.user;
+            // aggregate() does not cast strings to ObjectIds, so do it here
+            filter.createdBy = new mongoose.Types.ObjectId(req.user);
         }
 
         if (tags) {
@@ -117,10 +130,18 @@ const getHackathons = async (req, res) => {
                 message: "Invalid sort. Allowed: " + Object.keys(sortOptions).join(", ")
             });
         }
-        // _id as a tie-breaker keeps the order stable between pages
-        const sortBy = { ...sortOptions[sort || "newest"], _id: 1 };
+        const sortBy = sortOptions[sort || "newest"];
+        const sortField = Object.keys(sortBy)[0];
+        const undatedLast = dateSortFields.includes(sortField);
 
-        let query = Hackathon.find(filter).populate("createdBy", "name").sort(sortBy);
+        // a pipeline (not find) so we can flag hackathons without a date and sort them last
+        const pipeline = [{ $match: filter }];
+        if (undatedLast) {
+            // $ifNull covers both a missing field and an explicit null
+            pipeline.push({ $addFields: { undated: { $cond: [{ $ifNull: ["$" + sortField, false] }, 0, 1] } } });
+        }
+        // _id as a tie-breaker keeps the order stable between pages
+        pipeline.push({ $sort: { ...(undatedLast && { undated: 1 }), ...sortBy, _id: 1 } });
 
         // pagination is only applied when page or limit is sent, so existing callers still get every result
         const paginate = page !== undefined || limit !== undefined;
@@ -139,10 +160,27 @@ const getHackathons = async (req, res) => {
             }
 
             pageSize = Math.min(pageSize, MAX_LIMIT);
-            query = query.skip((pageNumber - 1) * pageSize).limit(pageSize);
+            pipeline.push({ $skip: (pageNumber - 1) * pageSize }, { $limit: pageSize });
         }
 
-        const [hackathons, total] = await Promise.all([query, Hackathon.countDocuments(filter)]);
+        // same shape as the old populate("createdBy", "name"): { _id, name } or null if the user is gone
+        pipeline.push(
+            { $lookup: { from: User.collection.name, localField: "createdBy", foreignField: "_id", as: "creator" } },
+            {
+                $addFields: {
+                    createdBy: {
+                        $cond: [
+                            { $gt: [{ $size: "$creator" }, 0] },
+                            { _id: { $arrayElemAt: ["$creator._id", 0] }, name: { $arrayElemAt: ["$creator.name", 0] } },
+                            null
+                        ]
+                    }
+                }
+            },
+            { $project: { creator: 0, undated: 0 } }
+        );
+
+        const [hackathons, total] = await Promise.all([Hackathon.aggregate(pipeline), Hackathon.countDocuments(filter)]);
 
         res.json({
             success: true,
@@ -184,6 +222,14 @@ const createHackathon = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Title and organizer are required"
+            });
+        }
+
+        const tooLong = findTooLong(req.body);
+        if (tooLong) {
+            return res.status(400).json({
+                success: false,
+                message: tooLongMessage(tooLong)
             });
         }
 
@@ -235,6 +281,14 @@ const updateHackathon = async (req, res) => {
             return res.status(403).json({
                 success: false,
                 message: "You can only edit hackathons you created"
+            });
+        }
+
+        const tooLong = findTooLong(req.body);
+        if (tooLong) {
+            return res.status(400).json({
+                success: false,
+                message: tooLongMessage(tooLong)
             });
         }
 
