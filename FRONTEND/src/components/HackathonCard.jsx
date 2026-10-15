@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import StatusBadge from "./StatusBadge";
 import { formatDateRange } from "../utils/formatDate";
+import BookmarkButton from "./BookmarkButton";
 
-function HackathonCard({ hackathon }) {
+function HackathonCard({ hackathon, onUnsaved }) {
     return (
         <div className="bg-white rounded-lg shadow p-4 flex flex-col gap-2">
             <div className="flex items-start justify-between gap-2">
@@ -13,9 +14,12 @@ function HackathonCard({ hackathon }) {
             <p className="text-sm text-gray-500">
                 {hackathon.mode} • {formatDateRange(hackathon.startDate, hackathon.endDate)}
             </p>
-            <Link to={"/hackathons/" + hackathon._id} className="text-indigo-600 text-sm font-medium">
-                View details
-            </Link>
+            <div className="flex items-center justify-between gap-2">
+                <Link to={"/hackathons/" + hackathon._id} className="text-indigo-600 text-sm font-medium">
+                    View details
+                </Link>
+                <BookmarkButton hackathonId={hackathon._id} onChange={onUnsaved} />
+            </div>
         </div>
     );
 }

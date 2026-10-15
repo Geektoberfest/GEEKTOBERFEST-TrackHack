@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Hackathon = require("../models/Hackathon");
+const Bookmark = require("../models/Bookmark");
 const User = require("../models/User");
 
 const fields = ["title","description","organizer","startDate","endDate","registrationDeadline","location","mode","status","website"];
@@ -328,6 +329,8 @@ const deleteHackathon = async (req, res) => {
         }
 
         await hackathon.deleteOne();
+        // remove saved entries that point at this hackathon so none are left broken
+        await Bookmark.deleteMany({ hackathon: hackathon._id });
 
         res.json({
             success: true,

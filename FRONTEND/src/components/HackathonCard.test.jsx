@@ -1,7 +1,12 @@
-import { describe, test, expect } from "vitest";
+import { describe, test, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import HackathonCard from "../components/HackathonCard";
+
+// the card renders a bookmark button; these tests only check the card, so stub the saved list
+vi.mock("../context/BookmarkContext", () => ({
+    useBookmarks: () => ({ isSaved: () => false, toggleSaved: async () => null })
+}));
 
 const hackathon = {
     _id: "abc123",
