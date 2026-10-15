@@ -6,6 +6,11 @@ import HackathonDetails from "../pages/HackathonDetails";
 import api from "../api";
 import * as AuthContext from "../context/AuthContext";
 
+// the details page renders a bookmark button; stub the saved list so these tests stay focused on delete
+vi.mock("../context/BookmarkContext", () => ({
+    useBookmarks: () => ({ isSaved: () => false, toggleSaved: async () => null })
+}));
+
 vi.mock("../api", () => ({
     default: {
         get: vi.fn(),

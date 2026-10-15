@@ -219,6 +219,9 @@ All application API routes are mounted under `/api`.
 | GET | `/api/github/profile/:username` | Fetch a GitHub profile |
 | GET | `/api/github/repos/:username` | Fetch GitHub repositories |
 | GET | `/api/github/stats/:username` | Fetch repository and contribution stats for the GitHub dashboard |
+| GET | `/api/bookmarks` | List the logged-in user's saved hackathons |
+| POST | `/api/bookmarks` | Save a hackathon (`{ "hackathon": "<id>" }`) |
+| DELETE | `/api/bookmarks/:hackathonId` | Remove a saved hackathon |
 
 ### Searching hackathons
 
