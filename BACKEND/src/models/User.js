@@ -24,6 +24,24 @@ const userSchema = new mongoose.Schema({
         trim: true,
         default: ""
     },
+    skills: {
+        type: [String],
+        default: []
+    },
+    interests: {
+        type: [String],
+        default: []
+    },
+    preferredModes: {
+        type: [String],
+        enum: ["Online", "Offline", "Hybrid"],
+        default: []
+    },
+    preferredLocation: {
+        type: String,
+        trim: true,
+        default: ""
+    },
     role: {
         type: String,
         enum: ["user", "admin"],

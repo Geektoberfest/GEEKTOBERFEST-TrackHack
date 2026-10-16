@@ -13,6 +13,8 @@ import NotFound from "./pages/NotFound";
 import GitHubDashboard from "./pages/GitHubDashboard";
 import SavedHackathons from "./pages/SavedHackathons";
 import Admin from "./pages/Admin";
+import Profile from "./pages/Profile";
+import Recommended from "./pages/Recommended";
 
 function App() {
     return (
@@ -29,6 +31,8 @@ function App() {
                     <Route path="/hackathons/:id" element={<ProtectedRoute><HackathonDetails /></ProtectedRoute>} />
                     <Route path="/hackathons/:id/edit" element={<ProtectedRoute><EditHackathon /></ProtectedRoute>} />
                     <Route path="/trackers/:id" element={<ProtectedRoute><TrackerPage /></ProtectedRoute>} />
+                    <Route path="/recommended" element={<ProtectedRoute><Recommended /></ProtectedRoute>} />
+                    <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                     <Route path="/github" element={<ProtectedRoute><GitHubDashboard /></ProtectedRoute>} />
                     <Route path="/saved" element={<ProtectedRoute><SavedHackathons /></ProtectedRoute>} />
                     <Route path="/admin" element={<ProtectedRoute adminOnly><Admin /></ProtectedRoute>} />

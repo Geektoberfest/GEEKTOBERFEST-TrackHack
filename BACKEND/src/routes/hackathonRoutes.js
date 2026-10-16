@@ -6,10 +6,12 @@ const {
     getHackathonById,
     createHackathon,
     updateHackathon,
-    deleteHackathon
+    deleteHackathon,
+    getRecommendedHackathons
 } = require("../controllers/hackathonController");
 const { auth } = require("../middleware/auth.middleware");
 
+router.get("/recommended", auth, getRecommendedHackathons);
 router.get("/", auth, getHackathons);
 router.get("/:id", auth, getHackathonById);
 router.post("/", auth, createHackathon);

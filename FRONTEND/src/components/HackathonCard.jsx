@@ -3,7 +3,10 @@ import StatusBadge from "./StatusBadge";
 import { formatDateRange } from "../utils/formatDate";
 import BookmarkButton from "./BookmarkButton";
 
-function HackathonCard({ hackathon, onUnsaved }) {
+function HackathonCard({ hackathon, recommendation }) {
+    const tags = Array.isArray(hackathon.tags) ? hackathon.tags : [];
+    const reasons = recommendation?.reasons || [];
+
     return (
         <div className="bg-white rounded-lg shadow p-4 flex flex-col gap-2">
             <div className="flex items-start justify-between gap-2">

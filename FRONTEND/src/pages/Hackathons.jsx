@@ -118,7 +118,7 @@ function Hackathons() {
             {loading ? (
                 <p>Loading...</p>
             ) : hackathons.length === 0 ? (
-                search || status || mode ? (
+                search || filters.status || filters.mode ? (
                     <EmptyState
                         title="No matching hackathons"
                         message="Try a different search term or change the filters."
