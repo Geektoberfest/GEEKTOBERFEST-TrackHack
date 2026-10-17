@@ -6,6 +6,7 @@ const trackerRoutes = require("./routes/trackerRoutes");
 const githubRoutes = require("./routes/githubRoutes");
 const bookmarkRoutes = require("./routes/bookmarkRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const teamRoutes = require("./routes/teamRoutes");
 
 const app = express();
 
@@ -25,5 +26,6 @@ app.use("/api/trackers", trackerRoutes);
 app.use("/api/github", githubRoutes);
 app.use("/api/bookmarks", bookmarkRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/teams", teamRoutes);
 
 module.exports = app;
