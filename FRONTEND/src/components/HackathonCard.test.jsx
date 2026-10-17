@@ -1,5 +1,6 @@
 import { describe, test, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import HackathonCard from "../components/HackathonCard";
 
@@ -66,5 +67,19 @@ describe("HackathonCard", () => {
         renderCard({ ...hackathon, startDate: "2026-11-01", endDate: "2026-11-01" });
 
         expect(screen.queryByText(/ to /)).not.toBeInTheDocument();
+    });
+
+    test("forwards onUnsaved to the bookmark button", async () => {
+        const user = userEvent.setup();
+        const onUnsaved = vi.fn();
+        render(
+            <MemoryRouter>
+                <HackathonCard hackathon={hackathon} onUnsaved={onUnsaved} />
+            </MemoryRouter>
+        );
+
+        await user.click(screen.getByRole("button", { name: /save hackathon/i }));
+
+        await waitFor(() => expect(onUnsaved).toHaveBeenCalledWith("abc123"));
     });
 });
