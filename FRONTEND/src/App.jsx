@@ -11,6 +11,7 @@ import EditHackathon from "./pages/EditHackathon";
 import TrackerPage from "./pages/TrackerPage";
 import NotFound from "./pages/NotFound";
 import GitHubDashboard from "./pages/GitHubDashboard";
+import Analytics from "./pages/Analytics";
 import SavedHackathons from "./pages/SavedHackathons";
 import Admin from "./pages/Admin";
 import Profile from "./pages/Profile";
@@ -34,6 +35,7 @@ function App() {
                     <Route path="/recommended" element={<ProtectedRoute><Recommended /></ProtectedRoute>} />
                     <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                     <Route path="/github" element={<ProtectedRoute><GitHubDashboard /></ProtectedRoute>} />
+                    <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
                     <Route path="/saved" element={<ProtectedRoute><SavedHackathons /></ProtectedRoute>} />
                     <Route path="/admin" element={<ProtectedRoute adminOnly><Admin /></ProtectedRoute>} />
                     <Route path="*" element={<NotFound />} />
