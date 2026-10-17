@@ -16,6 +16,8 @@ function HackathonDetails() {
     const [error, setError] = useState("");
     const [confirmingDelete, setConfirmingDelete] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const [managedTeams, setManagedTeams] = useState([]);
+    const [selectedTeamId, setSelectedTeamId] = useState("");
 
     useEffect(() => {
         const loadData = async () => {
@@ -34,6 +36,40 @@ function HackathonDetails() {
 
         loadData();
     }, [id]);
+
+    // teams the user can attach to this hackathon; the section still works without them
+    useEffect(() => {
+        const loadTeams = async () => {
+            try {
+                const res = await api.get("/teams");
+                setManagedTeams(res.data.teams.filter((team) => team.myRole === "owner" || team.myRole === "admin"));
+            } catch {
+                setManagedTeams([]);
+            }
+        };
+
+        loadTeams();
+    }, []);
+
+    const handleAddTeam = async () => {
+        try {
+            await api.post("/teams/" + selectedTeamId + "/hackathons", { hackathon: id });
+            const team = managedTeams.find((item) => item._id === selectedTeamId);
+            setHackathon({ ...hackathon, teams: [...hackathon.teams, { _id: team._id, name: team.name }] });
+            setSelectedTeamId("");
+        } catch (err) {
+            setError(err.response?.data?.message || "Could not add team");
+        }
+    };
+
+    const handleRemoveTeam = async (teamId) => {
+        try {
+            await api.delete("/teams/" + teamId + "/hackathons/" + id);
+            setHackathon({ ...hackathon, teams: hackathon.teams.filter((team) => team._id !== teamId) });
+        } catch (err) {
+            setError(err.response?.data?.message || "Could not remove team");
+        }
+    };
 
     const handleTrack = async () => {
         try {
@@ -68,6 +104,9 @@ function HackathonDetails() {
     const isOwner = hackathon.createdBy && hackathon.createdBy._id === user.id;
     const canManage = isOwner || user.role === "admin";
     const hasValidWebsite = hackathon.website && hackathon.website.startsWith("http");
+    const attachedTeams = Array.isArray(hackathon.teams) ? hackathon.teams : [];
+    const manageableIds = managedTeams.map((team) => team._id);
+    const addableTeams = managedTeams.filter((team) => !attachedTeams.some((attached) => attached._id === team._id));
 
     return (
         <div className="max-w-2xl mx-auto bg-white rounded-lg shadow p-6 flex flex-col gap-4">
@@ -108,6 +147,55 @@ function HackathonDetails() {
                     ))}
                 </div>
             )}
+
+            <section className="flex flex-col gap-2">
+                <h2 className="font-semibold">Teams</h2>
+                {attachedTeams.length === 0 ? (
+                    <p className="text-sm text-gray-600">No teams are working on this hackathon yet.</p>
+                ) : (
+                    <div className="flex flex-wrap gap-2">
+                        {attachedTeams.map((team) => (
+                            <span key={team._id} className="bg-indigo-50 text-indigo-700 text-sm px-3 py-1 rounded-full flex items-center gap-2">
+                                {team.name}
+                                {manageableIds.includes(team._id) && (
+                                    <button
+                                        onClick={() => handleRemoveTeam(team._id)}
+                                        aria-label={"Remove " + team.name + " from this hackathon"}
+                                        className="text-red-600 font-bold"
+                                    >
+                                        ×
+                                    </button>
+                                )}
+                            </span>
+                        ))}
+                    </div>
+                )}
+
+                {addableTeams.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                        <select
+                            aria-label="Team to add"
+                            value={selectedTeamId}
+                            onChange={(e) => setSelectedTeamId(e.target.value)}
+                            className="border border-gray-300 rounded px-2 py-1 bg-white"
+                        >
+                            <option value="">Add one of your teams</option>
+                            {addableTeams.map((team) => (
+                                <option key={team._id} value={team._id}>
+                                    {team.name}
+                                </option>
+                            ))}
+                        </select>
+                        <button
+                            onClick={handleAddTeam}
+                            disabled={!selectedTeamId}
+                            className="border border-gray-300 px-3 py-1 rounded disabled:opacity-50"
+                        >
+                            Add team
+                        </button>
+                    </div>
+                )}
+            </section>
 
             <div className="flex flex-wrap gap-3 pt-2">
                 <BookmarkButton hackathonId={hackathon._id} />

@@ -24,6 +24,7 @@ function Navbar() {
                         <Link to="/hackathons/create">Add Hackathon</Link>
                         <Link to="/github">GitHub</Link>
                         <Link to="/saved">Saved</Link>
+                        <Link to="/teams">Teams</Link>
                         {isAdmin && <Link to="/admin">Admin</Link>}
                         <Link to="/profile">{user.name}</Link>
                         <button onClick={handleLogout} className="bg-white text-indigo-600 px-3 py-1 rounded">

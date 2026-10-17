@@ -201,7 +201,9 @@ const getHackathonById = async (req, res) => {
             });
         }
 
-        const hackathon = await Hackathon.findById(req.params.id).populate("createdBy", "name");
+        const hackathon = await Hackathon.findById(req.params.id)
+            .populate("createdBy", "name")
+            .populate("teams", "name");
 
         if (!hackathon) {
             return res.status(404).json({

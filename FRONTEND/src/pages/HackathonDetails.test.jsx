@@ -47,6 +47,54 @@ const renderDetails = () => {
     );
 };
 
+describe("HackathonDetails teams section", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        api.get.mockImplementation((url) => {
+            if (url.startsWith("/trackers")) {
+                return Promise.resolve({ data: { trackers: [] } });
+            }
+            if (url === "/teams") {
+                return Promise.resolve({ data: { teams: [{ _id: "t1", name: "Byte Squad", myRole: "owner" }] } });
+            }
+            return Promise.resolve({ data: { hackathon: { ...hackathon, teams: [{ _id: "t1", name: "Byte Squad" }] } } });
+        });
+    });
+
+    test("shows attached teams and lets a team owner remove one", async () => {
+        const user = userEvent.setup();
+        api.delete.mockResolvedValue({ data: { success: true } });
+        renderDetails();
+
+        expect(await screen.findByText("Byte Squad")).toBeInTheDocument();
+        await user.click(screen.getByRole("button", { name: "Remove Byte Squad from this hackathon" }));
+
+        expect(api.delete).toHaveBeenCalledWith("/teams/t1/hackathons/h1");
+    });
+
+    test("lets a team owner attach one of their teams", async () => {
+        const user = userEvent.setup();
+        api.get.mockImplementation((url) => {
+            if (url.startsWith("/trackers")) {
+                return Promise.resolve({ data: { trackers: [] } });
+            }
+            if (url === "/teams") {
+                return Promise.resolve({ data: { teams: [{ _id: "t2", name: "Null Pointers", myRole: "admin" }] } });
+            }
+            return Promise.resolve({ data: { hackathon: { ...hackathon, teams: [] } } });
+        });
+        api.post.mockResolvedValue({ data: { success: true } });
+        renderDetails();
+
+        await screen.findByText("Geek Hack 2026");
+        await user.selectOptions(await screen.findByLabelText("Team to add"), "t2");
+        await user.click(screen.getByRole("button", { name: "Add team" }));
+
+        expect(api.post).toHaveBeenCalledWith("/teams/t2/hackathons", { hackathon: "h1" });
+        expect(await screen.findByText("Null Pointers")).toBeInTheDocument();
+    });
+});
+
 describe("HackathonDetails delete confirmation", () => {
     beforeEach(() => {
         vi.clearAllMocks();
