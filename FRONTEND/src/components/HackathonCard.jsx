@@ -3,7 +3,7 @@ import StatusBadge from "./StatusBadge";
 import { formatDateRange } from "../utils/formatDate";
 import BookmarkButton from "./BookmarkButton";
 
-function HackathonCard({ hackathon, recommendation }) {
+function HackathonCard({ hackathon, recommendation, onUnsaved }) {
     const tags = Array.isArray(hackathon.tags) ? hackathon.tags : [];
     const reasons = recommendation?.reasons || [];
 
