@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const User = require("../models/User");
 const Tracker = require("../models/Tracker");
 const Bookmark = require("../models/Bookmark");
+const { removeUserFromTeams } = require("../services/teamService");
 
 const listUsers = async (req, res) => {
     const users = await User.find().select("-password").sort({ createdAt: -1 });
@@ -91,6 +92,8 @@ const deleteUser = async (req, res) => {
     // participants keep their history (createdBy resolves to "Unknown").
     await Tracker.deleteMany({ user: user._id });
     await Bookmark.deleteMany({ user: user._id });
+    // leave their teams (keeping each one owned) and drop their invites
+    await removeUserFromTeams(user._id);
     await user.deleteOne();
 
     res.json({

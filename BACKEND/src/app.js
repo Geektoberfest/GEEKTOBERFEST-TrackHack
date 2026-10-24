@@ -7,6 +7,7 @@ const githubRoutes = require("./routes/githubRoutes");
 const bookmarkRoutes = require("./routes/bookmarkRoutes");
 const analyticsRoutes = require("./routes/analyticsRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const teamRoutes = require("./routes/teamRoutes");
 
 const app = express();
 
@@ -27,5 +28,6 @@ app.use("/api/github", githubRoutes);
 app.use("/api/bookmarks", bookmarkRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/teams", teamRoutes);
 
 module.exports = app;

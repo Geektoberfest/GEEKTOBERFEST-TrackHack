@@ -16,6 +16,8 @@ import SavedHackathons from "./pages/SavedHackathons";
 import Admin from "./pages/Admin";
 import Profile from "./pages/Profile";
 import Recommended from "./pages/Recommended";
+import Teams from "./pages/Teams";
+import TeamDetails from "./pages/TeamDetails";
 
 function App() {
     return (
@@ -37,6 +39,8 @@ function App() {
                     <Route path="/github" element={<ProtectedRoute><GitHubDashboard /></ProtectedRoute>} />
                     <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
                     <Route path="/saved" element={<ProtectedRoute><SavedHackathons /></ProtectedRoute>} />
+                    <Route path="/teams" element={<ProtectedRoute><Teams /></ProtectedRoute>} />
+                    <Route path="/teams/:id" element={<ProtectedRoute><TeamDetails /></ProtectedRoute>} />
                     <Route path="/admin" element={<ProtectedRoute adminOnly><Admin /></ProtectedRoute>} />
                     <Route path="*" element={<NotFound />} />
                     

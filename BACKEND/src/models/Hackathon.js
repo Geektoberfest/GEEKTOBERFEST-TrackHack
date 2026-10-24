@@ -49,6 +49,13 @@ const hackathonSchema = new mongoose.Schema({
         type: [String],
         default: []
     },
+    teams: {
+        type: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Team"
+        }],
+        default: []
+    },
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
