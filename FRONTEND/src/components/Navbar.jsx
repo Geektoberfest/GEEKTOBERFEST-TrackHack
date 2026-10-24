@@ -23,6 +23,7 @@ function Navbar() {
                         <Link to="/recommended">Recommended</Link>
                         <Link to="/hackathons/create">Add Hackathon</Link>
                         <Link to="/github">GitHub</Link>
+                        <Link to="/analytics">Analytics</Link>
                         <Link to="/saved">Saved</Link>
                         {isAdmin && <Link to="/admin">Admin</Link>}
                         <Link to="/profile">{user.name}</Link>
